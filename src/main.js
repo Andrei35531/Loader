@@ -90,6 +90,40 @@ liquidMat.onBeforeCompile = shader => {
 const liquid=new THREE.Mesh(liquidGeo,liquidMat);coin.add(liquid);
 const N=100,R=1.065,D=.115;
 const positions=new Float32Array(N*72);liquidGeo.setAttribute('position',new THREE.BufferAttribute(positions,3));
+// Small air bubbles rise through the cavity, sharing the animation clock.
+const bubbleGeometry = new THREE.SphereGeometry(1, 16, 12);
+const bubbles = Array.from({length: 22}, (_, i) => {
+  const radius = .014 + ((i * 7) % 11) * .0023;
+  const material = new THREE.MeshPhysicalMaterial({
+    color: 0xd6e6f8, metalness: .12, roughness: .08,
+    transmission: .25, thickness: .035, ior: 1.1,
+    clearcoat: 1, envMapIntensity: 1.4,
+    transparent: true, opacity: .6, depthWrite: false, depthTest: false,
+  });
+  const mesh = new THREE.Mesh(bubbleGeometry, material);
+  mesh.renderOrder = 2;
+  coin.add(mesh);
+  return {mesh, radius, x: -.86 + ((i * 13) % 23) / 22 * 1.72,
+    phase: ((i * 17) % 29) / 29, speed: .12 + (i % 5) * .018};
+});
+function updateBubbles(level, t) {
+  const waveScale=THREE.MathUtils.clamp((R-Math.abs(level))/.12,0,1);
+  for (const [i, bubble] of bubbles.entries()) {
+    const {mesh, radius}=bubble;
+    const x=bubble.x+.018*Math.sin(t*1.8+i);
+    const extent=Math.sqrt(Math.max(0,R*R-x*x));
+    const bottom=-extent;
+    const surface=Math.min(extent,level+waveScale*(.022*Math.sin(x*7+t*2.4)+.012*Math.sin(x*12-t*3.2)));
+    const y=bottom+((t*bubble.speed+bubble.phase)%(2*R));
+    const clearance=Math.min(y-bottom,surface-y)-radius;
+    const fade=THREE.MathUtils.clamp(clearance/.08,0,1);
+    mesh.visible=fade>0;
+    if (!mesh.visible) continue;
+    mesh.position.set(x,y,((i%3)-1)*.065);
+    mesh.scale.setScalar(radius*(.65+.35*fade));
+    mesh.material.opacity=.65*fade;
+  }
+}
 function water(level,t) {
   let k=0;
   const add=(x,y,z)=>{positions[k++]=x;positions[k++]=y;positions[k++]=z;};
@@ -136,7 +170,7 @@ function setTheme(light) {
 setTheme(document.body.classList.contains('light'));
 document.querySelector('#theme').onclick=()=>setTheme(!document.body.classList.contains('light'));
 new ResizeObserver(()=>{const {width,height}=host.getBoundingClientRect();renderer.setSize(width,height);camera.aspect=width/height;camera.position.z=width<500?9.5:7.7;camera.updateProjectionMatrix();}).observe(host);
-function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.05);last=now;if(!paused&&!document.hidden)time+=dt*speed;const cycle=time%12;const fill=(1-Math.cos(cycle/12*Math.PI*2))/2;coin.rotation.y=time*Math.PI/3;for(const {mesh,direction} of reliefs) mesh.visible=direction*Math.cos(coin.rotation.y)>0;water(-R+2*R*fill,time);renderer.render(scene,camera);}
+function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.05);last=now;if(!paused&&!document.hidden)time+=dt*speed;const cycle=time%12;const fill=(1-Math.cos(cycle/12*Math.PI*2))/2;coin.rotation.y=time*Math.PI/3;for(const {mesh,direction} of reliefs) mesh.visible=direction*Math.cos(coin.rotation.y)>0;water(-R+2*R*fill,time);updateBubbles(-R+2*R*fill,time);renderer.render(scene,camera);}
 requestAnimationFrame(frame);
 
 
