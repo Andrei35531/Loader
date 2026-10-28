@@ -120,7 +120,8 @@ document.querySelector('#color').value='#5297ff';document.querySelector('#color'
 document.querySelector('#restart').onclick=()=>{time=0;};
 document.querySelector('#theme').onclick=e=>{const light=document.body.classList.toggle('light');e.target.textContent=light?'Тёмный фон':'Светлый фон';};
 new ResizeObserver(()=>{const {width,height}=host.getBoundingClientRect();renderer.setSize(width,height);camera.aspect=width/height;camera.position.z=width<500?9.5:7.7;camera.updateProjectionMatrix();}).observe(host);
-function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.05);last=now;if(!paused&&!document.hidden)time+=dt*speed;const cycle=time%12;const fill=(1-Math.cos(cycle/12*Math.PI*2))/2;coin.rotation.y=time*Math.PI/3;for(const {mesh,direction} of reliefs) mesh.visible=direction*Math.cos(coin.rotation.y)>0;water(-R+2*R*fill,time);document.querySelector('#percent').textContent=Math.round(fill*100)+'%';document.querySelector('#state').textContent=cycle<6?'Наполняем возможности':'Продолжаем движение';renderer.render(scene,camera);}
+function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.05);last=now;if(!paused&&!document.hidden)time+=dt*speed;const cycle=time%12;const fill=(1-Math.cos(cycle/12*Math.PI*2))/2;coin.rotation.y=time*Math.PI/3;for(const {mesh,direction} of reliefs) mesh.visible=direction*Math.cos(coin.rotation.y)>0;water(-R+2*R*fill,time);renderer.render(scene,camera);}
 requestAnimationFrame(frame);
+
 
 
