@@ -114,7 +114,7 @@ const bubbles = Array.from({length: 22}, (_, i) => {
     color: 0xd6e6f8, metalness: .12, roughness: .08,
     transmission: .25, thickness: .035, ior: 1.1,
     clearcoat: 1, envMapIntensity: 1.4,
-    transparent: true, opacity: .6, depthWrite: false, depthTest: false,
+    transparent: true, opacity: .3, depthWrite: false, depthTest: false,
   });
   const mesh = new THREE.Mesh(bubbleGeometry, material);
   mesh.renderOrder = 2;
@@ -137,7 +137,7 @@ function updateBubbles(level, t) {
     if (!mesh.visible) continue;
     mesh.position.set(x,y,((i%3)-1)*.065);
     mesh.scale.setScalar(radius*(.65+.35*fade));
-    mesh.material.opacity=.65*fade;
+    mesh.material.opacity=.3*fade;
   }
 }
 function water(level,t) {
@@ -192,6 +192,7 @@ document.querySelector('#theme').onclick=()=>setTheme(!document.body.classList.c
 new ResizeObserver(()=>{const {width,height}=host.getBoundingClientRect();renderer.setSize(width,height);camera.aspect=width/height;camera.position.z=width<500?9.5:7.7;camera.updateProjectionMatrix();}).observe(host);
 function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.05);last=now;if(!paused&&!document.hidden)time+=dt*speed;const cycle=time%12;const fill=(1-Math.cos(cycle/12*Math.PI*2))/2;coin.rotation.y=time*Math.PI/3;for(const {mesh,direction} of reliefs) mesh.visible=direction*Math.cos(coin.rotation.y)>0;water(-R+2*R*fill,time);updateBubbles(-R+2*R*fill,time);renderer.render(scene,camera);}
 requestAnimationFrame(frame);
+
 
 
 
