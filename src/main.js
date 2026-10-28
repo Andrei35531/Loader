@@ -21,7 +21,7 @@ const glass=new THREE.MeshPhysicalMaterial({color:0xe5f0ff,metalness:0,roughness
 const shape=new THREE.Shape();shape.absarc(0,0,1.16,0,Math.PI*2,false);
 const bodyGeo=new THREE.ExtrudeGeometry(shape,{depth:.22,bevelEnabled:true,bevelSegments:6,steps:1,bevelSize:.075,bevelThickness:.075,curveSegments:128});bodyGeo.translate(0,0,-.11);
 coin.add(new THREE.Mesh(bodyGeo,glass));
-const rimMat=new THREE.MeshPhysicalMaterial({color:0xc7e2ff,metalness:.5,roughness:.12,transmission:.35,thickness:.2,clearcoat:1});
+const rimMat=new THREE.MeshPhysicalMaterial({color:0xf2f7ff,metalness:0,roughness:.09,transmission:1,thickness:.1,ior:1.46,clearcoat:.35,envMapIntensity:.65,transparent:true,opacity:.28,depthWrite:false});
 for(const z of [-.16,.16]){const rim=new THREE.Mesh(new THREE.TorusGeometry(1.15,.045,16,160),rimMat);rim.position.z=z;coin.add(rim);const inner=new THREE.Mesh(new THREE.TorusGeometry(1.025,.009,8,128),rimMat);inner.position.z=z+.002*Math.sign(z);coin.add(inner);}
 // Raised, bevelled glass relief, embedded into each face of the coin.
 // Both symbols are actual geometry: their edges catch the environment light.
@@ -80,10 +80,39 @@ const liquidMat=new THREE.MeshPhysicalMaterial({color:0x5297ff,metalness:.15,rou
 const liquid=new THREE.Mesh(liquidGeo,liquidMat);coin.add(liquid);
 const N=100,R=1.065,D=.115;
 const positions=new Float32Array(N*72);liquidGeo.setAttribute('position',new THREE.BufferAttribute(positions,3));
-function water(level,t){let k=0;const add=(x,y,z)=>{positions[k++]=x;positions[k++]=y;positions[k++]=z;};const tri=(a,b,c)=>{add(...a);add(...b);add(...c);};const quad=(a,b,c,d)=>{tri(a,b,c);tri(a,c,d);};
-for(let i=0;i<N;i++){const x1=-R+2*R*i/N,x2=-R+2*R*(i+1)/N;const b1=-Math.sqrt(Math.max(0,R*R-x1*x1)),b2=-Math.sqrt(Math.max(0,R*R-x2*x2));const top=x=>THREE.MathUtils.clamp(level+.022*Math.sin(x*7+t*2.4)+.012*Math.sin(x*12-t*3.2),-Math.sqrt(Math.max(0,R*R-x*x)),Math.sqrt(Math.max(0,R*R-x*x)));const y1=top(x1),y2=top(x2);
-quad([x1,b1,D],[x2,b2,D],[x2,y2,D],[x1,y1,D]);quad([x2,b2,-D],[x1,b1,-D],[x1,y1,-D],[x2,y2,-D]);quad([x1,y1,D],[x2,y2,D],[x2,y2,-D],[x1,y1,-D]);quad([x2,b2,D],[x1,b1,D],[x1,b1,-D],[x2,b2,-D]);}
-liquidGeo.attributes.position.needsUpdate=true;liquidGeo.computeVertexNormals();liquidGeo.computeBoundingSphere();}
+function water(level,t) {
+  let k=0;
+  const add=(x,y,z)=>{positions[k++]=x;positions[k++]=y;positions[k++]=z;};
+  const tri=(a,b,c)=>{add(...a);add(...b);add(...c);};
+  const quad=(a,b,c,d)=>{tri(a,b,c);tri(a,c,d);};
+  const extent=x=>Math.sqrt(Math.max(0,R*R-x*x));
+  const waveScale=THREE.MathUtils.clamp((R-Math.abs(level))/.12,0,1);
+  const surface=x=>level+waveScale*(.022*Math.sin(x*7+t*2.4)+.012*Math.sin(x*12-t*3.2));
+  const depth=x=>surface(x)+extent(x);
+  // Dry slices must emit no faces, including their bottom and top caps.
+  // Otherwise those coincident caps form blue ribbons along the empty rim.
+  for(let i=0;i<N;i++) {
+    let x1=-R+2*R*i/N,x2=-R+2*R*(i+1)/N;
+    const wet1=depth(x1)>0,wet2=depth(x2)>0;
+    if(!wet1&&!wet2) continue;
+    if(wet1!==wet2) {
+      let dry=wet1?x2:x1,wet=wet1?x1:x2;
+      for(let j=0;j<16;j++) {const mid=(dry+wet)/2;if(depth(mid)>0)wet=mid;else dry=mid;}
+      if(wet1)x2=(dry+wet)/2;else x1=(dry+wet)/2;
+    }
+    const b1=-extent(x1),b2=-extent(x2);
+    const y1=THREE.MathUtils.clamp(surface(x1),b1,-b1);
+    const y2=THREE.MathUtils.clamp(surface(x2),b2,-b2);
+    quad([x1,b1,D],[x2,b2,D],[x2,y2,D],[x1,y1,D]);
+    quad([x2,b2,-D],[x1,b1,-D],[x1,y1,-D],[x2,y2,-D]);
+    quad([x1,y1,D],[x2,y2,D],[x2,y2,-D],[x1,y1,-D]);
+    quad([x2,b2,D],[x1,b1,D],[x1,b1,-D],[x2,b2,-D]);
+  }
+  liquidGeo.setDrawRange(0,k/3);
+  liquid.visible=k>0;
+  liquidGeo.attributes.position.needsUpdate=true;
+  liquidGeo.computeVertexNormals();liquidGeo.computeBoundingSphere();
+}
 let paused=matchMedia('(prefers-reduced-motion: reduce)').matches,time=0,speed=1,last=performance.now();
 const pause=document.querySelector('#pause');function syncPause(){pause.textContent=paused?'▶ Продолжить':'Ⅱ Пауза';pause.setAttribute('aria-pressed',String(paused));}syncPause();pause.onclick=()=>{paused=!paused;syncPause();};
 document.querySelector('#speed').oninput=e=>{speed=+e.target.value;document.querySelector('#speedValue').textContent=speed+'×';};
