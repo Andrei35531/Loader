@@ -1,6 +1,6 @@
 # PLATIVEZDE — Glass coin loader
 
-Local Three.js animation: glass coin, ₽ / $ faces, theme-dependent liquid and a seamless 12-second fill/drain cycle. One revolution takes 6 seconds. Controls: pause, speed, theme, restart. Reduced-motion preference starts paused.
+Local Three.js animation: glass coin, ₽ / $ faces, theme-dependent liquid and a seamless 12-second fill/drain cycle. One revolution takes 6 seconds. The page shows only the animation and a theme toggle. Reduced-motion preference starts paused.
 
 ## Run
 
@@ -21,3 +21,4 @@ Success and cancel animations are subsequent work.
 Liquid palette is locked to the theme: light #1473E6 (Figma CTA 3:44346), dark #579CFF (Figma CTA 100:12632). No custom colour control.
 
 Screen backgrounds match Figma: light #FFFFFF (3:44315), dark #131313 (96:11525). The canvas and page use solid backgrounds without gradients.
+

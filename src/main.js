@@ -181,10 +181,6 @@ function water(level,t) {
   crestGeo.attributes.position.needsUpdate=true;crestGeo.computeBoundingSphere();
 }
 let paused=matchMedia('(prefers-reduced-motion: reduce)').matches,time=0,speed=1,last=performance.now();
-const pause=document.querySelector('#pause');function syncPause(){pause.textContent=paused?'▶ Продолжить':'Ⅱ Пауза';pause.setAttribute('aria-pressed',String(paused));}syncPause();pause.onclick=()=>{paused=!paused;syncPause();};
-document.querySelector('#speed').oninput=e=>{speed=+e.target.value;document.querySelector('#speedValue').textContent=speed+'×';};
-
-document.querySelector('#restart').onclick=()=>{time=0;};
 function setTheme(light) {
   document.body.classList.toggle('light',light);
   liquidMat.color.set(light ? liquidColors.light : liquidColors.dark);
@@ -196,6 +192,7 @@ document.querySelector('#theme').onclick=()=>setTheme(!document.body.classList.c
 new ResizeObserver(()=>{const {width,height}=host.getBoundingClientRect();renderer.setSize(width,height);camera.aspect=width/height;camera.position.z=width<500?9.5:7.7;camera.updateProjectionMatrix();}).observe(host);
 function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.05);last=now;if(!paused&&!document.hidden)time+=dt*speed;const cycle=time%12;const fill=(1-Math.cos(cycle/12*Math.PI*2))/2;coin.rotation.y=time*Math.PI/3;for(const {mesh,direction} of reliefs) mesh.visible=direction*Math.cos(coin.rotation.y)>0;water(-R+2*R*fill,time);updateBubbles(-R+2*R*fill,time);renderer.render(scene,camera);}
 requestAnimationFrame(frame);
+
 
 
 
