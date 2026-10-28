@@ -18,4 +18,5 @@ Design reference: PLATIVEZDE Figma, file qhOgTR3Z8vwlO90JR34Fus. Reviewed the po
 
 Success and cancel animations are subsequent work.
 
-Liquid palette is locked to the theme: light #1473E6 (Figma CTA 3:44346), dark #FFFFFF (user-requested white, matching CTA text). No custom colour control.
+Liquid palette is locked to the theme: light #1473E6 (Figma CTA 3:44346), dark #579CFF (Figma CTA 100:12632). No custom colour control.
+

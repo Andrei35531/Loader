@@ -76,8 +76,8 @@ for (const [shapes, direction] of [[rubleRelief(), 1], [dollarRelief(), -1]]) {
 // A closed liquid volume is rebuilt inside the circular cavity. Its upper
 // boundary is a wave in local X; rotation about Y keeps gravity vertical.
 const liquidGeo=new THREE.BufferGeometry();
-// PLATIVEZDE CTA blue: KYC button 3:44346. White follows the requested dark palette.
-const liquidColors = Object.freeze({ light: 0x1473e6, dark: 0xffffff });
+// PLATIVEZDE CTA fills: light 3:44346 (#1473E6), dark 100:12632 (#579CFF).
+const liquidColors = Object.freeze({ light: 0x1473e6, dark: 0x579cff });
 const liquidMat=new THREE.MeshPhysicalMaterial({color:liquidColors.dark,metalness:0,roughness:.16,clearcoat:.6,transmission:.08,thickness:.35,ior:1.333,side:THREE.DoubleSide,envMapIntensity:.45});
 // Keep the CTA base colour stable under studio lights; retain subtle 3D shading.
 liquidMat.toneMapped = false;
@@ -188,7 +188,7 @@ document.querySelector('#restart').onclick=()=>{time=0;};
 function setTheme(light) {
   document.body.classList.toggle('light',light);
   liquidMat.color.set(light ? liquidColors.light : liquidColors.dark);
-  crestMaterial.color.set(light ? 0x9bd8ff : 0x98aec5);
+  crestMaterial.color.set(light ? 0x9bd8ff : 0xc1e1ff);
   document.querySelector('#theme').textContent=light?'Тёмный фон':'Светлый фон';
 }
 setTheme(document.body.classList.contains('light'));
@@ -196,6 +196,7 @@ document.querySelector('#theme').onclick=()=>setTheme(!document.body.classList.c
 new ResizeObserver(()=>{const {width,height}=host.getBoundingClientRect();renderer.setSize(width,height);camera.aspect=width/height;camera.position.z=width<500?9.5:7.7;camera.updateProjectionMatrix();}).observe(host);
 function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.05);last=now;if(!paused&&!document.hidden)time+=dt*speed;const cycle=time%12;const fill=(1-Math.cos(cycle/12*Math.PI*2))/2;coin.rotation.y=time*Math.PI/3;for(const {mesh,direction} of reliefs) mesh.visible=direction*Math.cos(coin.rotation.y)>0;water(-R+2*R*fill,time);updateBubbles(-R+2*R*fill,time);renderer.render(scene,camera);}
 requestAnimationFrame(frame);
+
 
 
 
