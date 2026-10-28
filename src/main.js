@@ -107,14 +107,38 @@ function waterSurface(x,z,level,t) {
   return level+envelope*(broad+ripple+fine+sway);
 }
 // Small air bubbles rise through the cavity, sharing the animation clock.
-const bubbleGeometry = new THREE.SphereGeometry(1, 16, 12);
+const bubbleGeometry = new THREE.SphereGeometry(1, 32, 24);
 const bubbles = Array.from({length: 22}, (_, i) => {
   const radius = .014 + ((i * 7) % 11) * .0023;
-  const material = new THREE.MeshPhysicalMaterial({
-    color: 0xd6e6f8, metalness: .12, roughness: .08,
-    transmission: .25, thickness: .035, ior: 1.1,
-    clearcoat: 1, envMapIntensity: 1.4,
-    transparent: true, opacity: .3, depthWrite: false, depthTest: false,
+  // Clear centre, Fresnel outline and a small studio-light crescent.
+  const material = new THREE.ShaderMaterial({
+    uniforms: { uFade: { value: 0 } },
+    transparent: true, depthWrite: false, depthTest: false,
+    vertexShader: `
+      varying vec3 vNormal;
+      varying vec3 vView;
+      void main() {
+        vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);
+        vNormal = normalize(normalMatrix * normal);
+        vView = -viewPosition.xyz;
+        gl_Position = projectionMatrix * viewPosition;
+      }
+    `,
+    fragmentShader: `
+      uniform float uFade;
+      varying vec3 vNormal;
+      varying vec3 vView;
+      void main() {
+        vec3 n = normalize(vNormal);
+        float facing = clamp(dot(n, normalize(vView)), 0.0, 1.0);
+        float rim = pow(1.0 - facing, 3.0);
+        float crescent = pow(max(dot(normalize(n.xy + vec2(0.0001)), normalize(vec2(-0.65, 0.76))), 0.0), 5.0);
+        float glint = pow(max(dot(n, normalize(vec3(-0.4, 0.55, 0.72))), 0.0), 65.0);
+        float lowerReflection = pow(max(dot(n, normalize(vec3(0.45, -0.7, 0.5))), 0.0), 24.0);
+        float alpha = (0.008 + rim * (0.22 + 0.42 * crescent) + 0.55 * glint + 0.09 * lowerReflection) * uFade;
+        gl_FragColor = vec4(vec3(1.0), min(alpha, 0.75));
+      }
+    `,
   });
   const mesh = new THREE.Mesh(bubbleGeometry, material);
   mesh.renderOrder = 2;
@@ -137,7 +161,7 @@ function updateBubbles(level, t) {
     if (!mesh.visible) continue;
     mesh.position.set(x,y,((i%3)-1)*.065);
     mesh.scale.setScalar(radius*(.65+.35*fade));
-    mesh.material.opacity=.3*fade;
+    mesh.material.uniforms.uFade.value=fade;
   }
 }
 function water(level,t) {
