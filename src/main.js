@@ -76,7 +76,17 @@ for (const [shapes, direction] of [[rubleRelief(), 1], [dollarRelief(), -1]]) {
 // A closed liquid volume is rebuilt inside the circular cavity. Its upper
 // boundary is a wave in local X; rotation about Y keeps gravity vertical.
 const liquidGeo=new THREE.BufferGeometry();
-const liquidMat=new THREE.MeshPhysicalMaterial({color:0x5297ff,metalness:.15,roughness:.13,clearcoat:1,transmission:.18,thickness:.35,ior:1.333,side:THREE.DoubleSide,envMapIntensity:1.1});
+// PLATIVEZDE CTA blue: KYC button 3:44346. White follows the requested dark palette.
+const liquidColors = Object.freeze({ light: 0x1473e6, dark: 0xffffff });
+const liquidMat=new THREE.MeshPhysicalMaterial({color:liquidColors.dark,metalness:0,roughness:.16,clearcoat:.6,transmission:.08,thickness:.35,ior:1.333,side:THREE.DoubleSide,envMapIntensity:.45});
+// Keep the CTA base colour stable under studio lights; retain subtle 3D shading.
+liquidMat.toneMapped = false;
+liquidMat.onBeforeCompile = shader => {
+  shader.fragmentShader = shader.fragmentShader.replace(
+    '#include <opaque_fragment>',
+    'outgoingLight = mix(diffuseColor.rgb, outgoingLight, 0.1);\n#include <opaque_fragment>'
+  );
+};
 const liquid=new THREE.Mesh(liquidGeo,liquidMat);coin.add(liquid);
 const N=100,R=1.065,D=.115;
 const positions=new Float32Array(N*72);liquidGeo.setAttribute('position',new THREE.BufferAttribute(positions,3));
@@ -116,12 +126,19 @@ function water(level,t) {
 let paused=matchMedia('(prefers-reduced-motion: reduce)').matches,time=0,speed=1,last=performance.now();
 const pause=document.querySelector('#pause');function syncPause(){pause.textContent=paused?'▶ Продолжить':'Ⅱ Пауза';pause.setAttribute('aria-pressed',String(paused));}syncPause();pause.onclick=()=>{paused=!paused;syncPause();};
 document.querySelector('#speed').oninput=e=>{speed=+e.target.value;document.querySelector('#speedValue').textContent=speed+'×';};
-document.querySelector('#color').value='#5297ff';document.querySelector('#color').oninput=e=>liquidMat.color.set(e.target.value);
+
 document.querySelector('#restart').onclick=()=>{time=0;};
-document.querySelector('#theme').onclick=e=>{const light=document.body.classList.toggle('light');e.target.textContent=light?'Тёмный фон':'Светлый фон';};
+function setTheme(light) {
+  document.body.classList.toggle('light',light);
+  liquidMat.color.set(light ? liquidColors.light : liquidColors.dark);
+  document.querySelector('#theme').textContent=light?'Тёмный фон':'Светлый фон';
+}
+setTheme(document.body.classList.contains('light'));
+document.querySelector('#theme').onclick=()=>setTheme(!document.body.classList.contains('light'));
 new ResizeObserver(()=>{const {width,height}=host.getBoundingClientRect();renderer.setSize(width,height);camera.aspect=width/height;camera.position.z=width<500?9.5:7.7;camera.updateProjectionMatrix();}).observe(host);
 function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.05);last=now;if(!paused&&!document.hidden)time+=dt*speed;const cycle=time%12;const fill=(1-Math.cos(cycle/12*Math.PI*2))/2;coin.rotation.y=time*Math.PI/3;for(const {mesh,direction} of reliefs) mesh.visible=direction*Math.cos(coin.rotation.y)>0;water(-R+2*R*fill,time);renderer.render(scene,camera);}
 requestAnimationFrame(frame);
+
 
 
 
