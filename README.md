@@ -20,3 +20,4 @@ Success and cancel animations are subsequent work.
 
 Liquid palette is locked to the theme: light #1473E6 (Figma CTA 3:44346), dark #579CFF (Figma CTA 100:12632). No custom colour control.
 
+Screen backgrounds match Figma: light #FFFFFF (3:44315), dark #131313 (96:11525). The canvas and page use solid backgrounds without gradients.
