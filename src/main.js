@@ -135,7 +135,7 @@ const bubbles = Array.from({length: 22}, (_, i) => {
         float crescent = pow(max(dot(normalize(n.xy + vec2(0.0001)), normalize(vec2(-0.65, 0.76))), 0.0), 5.0);
         float glint = pow(max(dot(n, normalize(vec3(-0.4, 0.55, 0.72))), 0.0), 65.0);
         float lowerReflection = pow(max(dot(n, normalize(vec3(0.45, -0.7, 0.5))), 0.0), 24.0);
-        float alpha = (0.008 + rim * (0.22 + 0.42 * crescent) + 0.55 * glint + 0.09 * lowerReflection) * uFade;
+        float alpha = (0.008 + rim * (0.30 + 0.48 * crescent) + 0.65 * glint + 0.12 * lowerReflection) * uFade;
         gl_FragColor = vec4(vec3(1.0), min(alpha, 0.75));
       }
     `,
@@ -216,6 +216,7 @@ document.querySelector('#theme').onclick=()=>setTheme(!document.body.classList.c
 new ResizeObserver(()=>{const {width,height}=host.getBoundingClientRect();renderer.setSize(width,height);camera.aspect=width/height;camera.position.z=width<500?9.5:7.7;camera.updateProjectionMatrix();}).observe(host);
 function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.05);last=now;if(!paused&&!document.hidden)time+=dt*speed;const cycle=time%12;const fill=(1-Math.cos(cycle/12*Math.PI*2))/2;coin.rotation.y=time*Math.PI/3;for(const {mesh,direction} of reliefs) mesh.visible=direction*Math.cos(coin.rotation.y)>0;water(-R+2*R*fill,time);updateBubbles(-R+2*R*fill,time);renderer.render(scene,camera);}
 requestAnimationFrame(frame);
+
 
 
 
